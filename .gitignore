@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# django
+*.sqlite3
+.my_pgpass
+.pg_service.conf
+venv
+__pycache__
+Books/migrations/*.py
+migration
+Books/migrations/__pycache__
+
+
+
