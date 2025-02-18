@@ -139,5 +139,6 @@ migration
 Books/migrations/__pycache__
 
 src/utils/db/*.db
-
-
+src/*.db
+*.db
+.idea
