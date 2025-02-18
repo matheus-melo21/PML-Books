@@ -138,5 +138,6 @@ Books/migrations/*.py
 migration
 Books/migrations/__pycache__
 
+src/utils/db/*.db
 
 
