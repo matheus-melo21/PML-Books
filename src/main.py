@@ -17,7 +17,16 @@ tags_metadata = [
     },
 ]
 
-app = FastAPI()
+description = """
+## PML-BOOKS
+
+"""
+
+app = FastAPI(
+    title="PML-BOOKS",
+    summary="Pesquisa de Livros. 📖",
+    version="0.0.1",
+)
 
 if not os.path.exists('database.db'):
     SQLModel.metadata.create_all(database)
