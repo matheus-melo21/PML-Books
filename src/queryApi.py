@@ -66,6 +66,28 @@ def consultarIdLivro(livroId: uuid.UUID):
     except Exception as e:
         print(f"Não foi possível consultar o livro no banco de dados.", {str(e)} )
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+    
+
+#==================================== Get Autor ==============================
+def consultaridAutor(autorId):
+
+    try:
+        with Session(database) as session:
+            # Faz a consulta do autor com o ID
+            query = select(Autores).where(Autores.idAutor == autorId)
+            # Armazena o primeiro resultado da lista
+            result = session.exec(query).first()
+
+            if result:
+                return {"status": status.HTTP_200_OK, "mensagem": f"O autor encontrado com o ID '{autorId}' foi:", "autor": result }
+            
+            if not result:
+                return {"satus": status.HTTP_404_NOT_FOUND, "mensagem": f"O autor com o id '{idAutor}' não foi encontrado no banco de dados."}
+            else:
+                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
+    except Exception as e:
+        print(f"Não foi possível consultar o autor no banco de dados.", {str(e)} )
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
 
 #================================== Post ==============================
 

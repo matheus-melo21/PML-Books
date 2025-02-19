@@ -65,13 +65,15 @@ def consultarIsbn(idIsbn, response: Response):
 
 
 #======= Consultar Autor - Get =======
-'''
-@app.get("/consultar/autor={autor}", tags=["Autores"])
-def consultarAutor(autor: str):
-    #return {"message": f"Estes são os livros do autor {autor}: \n {db}""}}
-    return consultarLivroAutor(autor)
-'''
-# TODO - Como faer o db armazenar os autores do livro?
+
+@app.get("/consultar/autor={idAutor}", tags=["Autores"], status_code=200)
+def consultarAutoridAutor(idAutor: uuid.UUID, response: Response):
+     
+    result = consultaridAutor(idAutor)
+
+    response.status_code = result["status"]
+
+    return result
 
 #======= Consultar Editora - Get =======
 
