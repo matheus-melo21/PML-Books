@@ -44,9 +44,12 @@ def consultar(response: Response):
 
 
 #======= Consultar ID Livro - Get =======
-@app.get("/consultar/id={idLivro}", tags=["Livros"])
+@app.get("/consultar/id={idLivro}", tags=["Livros"], status_code=200)
 def consultarId(idLivro: uuid.UUID, response: Response):
+    # Execute a função e chame-a de result
     result = consultarIdLivro(idLivro)
+    # Pegue a variável status e atribua a response
+    response.status_code = result["status"]
     return result
 
 
@@ -74,6 +77,9 @@ def consultarAutor(autor: str):
 
 # TODO - Criar endpoint para consultar livros por editora
 
+#======= Consultar Título - Get =======
+
+# TODO - Criar endpoint para consultar livros pelo título
 
 #======= Adicionar um livro - Post =======
 @app.post("/adicionar/isbn={idIsbn}", tags=["Livros"], status_code=200)
@@ -87,12 +93,13 @@ def adicionarLivroIsbn(idIsbn: str, response: Response):
 
 
 #======= Atualizar um livro - Put =======
-@app.put("/atualizar/isbn={idIsbn}", tags=["Livros"])
+@app.put("/atualizar/isbn={idIsbn}", tags=["Livros"], status_code=200)
 # Defina o endpoint recebendo uma str e a resposta como Response
 def atualizarIdLivro(idIsbn: str, response: Response):
     # Execute a função e chame-a de result
     result = atualizarLivro(idIsbn)
-    # Retorne o resultado e/ou a response
+    # Pegue a variável status e atribua a response
+    response.status_code = result["status"]
     return result
 
 

@@ -111,7 +111,7 @@ def cadastrarLivroIsbn(idIsbn: str):
         print(f"Erro na consulta do livro: {str(e)}")
         return {"status": "error", "mensagem": str(e)}
     
-#================================== Put ==============================
+#================================== Put ===========================================
 
 def atualizarLivro(idIsbn: str):
     try:
@@ -132,16 +132,16 @@ def atualizarLivro(idIsbn: str):
                     if result:
                         # Informe que o livro foi atualizado com sucesso
                         return {"status": status.HTTP_200_OK, "mensagem": f"O livro com ISBN '{idIsbn}' foi atualizado com sucesso."}
-                    # Erro ao cadastrar o livro
                     else:
+                        # Erro ao cadastrar o livro
                         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro ao cadastrar o livro no banco de dados."}
                     # Erro ao excluir o livro
                 return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "O livro com ISBN '{idIsbn}' não pode ser excluído do banco de dados."}
-            # Erro ao encontrar o livro no db
             if not result:
+                # Erro ao encontrar o livro no db
                 return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foi encontrado um livro com esse ISBN no banco de dados"}
-            # Erro interno no servidor
             else:
+                # Erro interno no servidor
                 return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno do servidor."}
     # Se houver um erro, armazene-o em 'e' e informe-o
     except Exception as e:
