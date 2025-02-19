@@ -54,12 +54,14 @@ def consultar(response: Response):
     return result
 
 #======= Atualizar - Put =======
-@app.put("/atualizar", tags=["Livros"])
-def atualizarIdLivro():
-    #
-    return {"message": "Livro atualizado com sucesso."}
+@app.put("/atualizar/isbn={idIsbn}", tags=["Livros"])
+def atualizarIdLivro(idIsbn: str, response: Response):
+    result = atualizarLivro(idIsbn)
+    return result
 
 #======= Atualizar - Patch =======
+
+#TODO - Criar endpoint patch para atualizar apenas um campo do livro
 
 #======= Excluir - Delete =======
 @app.delete("/excluir/id={idLivro}", tags=["Livros"], status_code=200)
