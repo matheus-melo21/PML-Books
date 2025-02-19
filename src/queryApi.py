@@ -3,6 +3,9 @@ from sqlmodel import *
 from utils.db.database import *
 from fastapi import status
 
+# FIXME - Corrigir a consulta com espaços e/ou com caracteres especiais
+# FIXME - Corrigir pluralidade nas mensagens de retorno
+
 #==================================== Get Todos os Livros ==============================
     
 def consultarLivros():
@@ -82,12 +85,58 @@ def consultaridAutor(autorId):
                 return {"status": status.HTTP_200_OK, "mensagem": f"O autor encontrado com o ID '{autorId}' foi:", "autor": result }
             
             if not result:
-                return {"satus": status.HTTP_404_NOT_FOUND, "mensagem": f"O autor com o id '{idAutor}' não foi encontrado no banco de dados."}
+                return {"satus": status.HTTP_404_NOT_FOUND, "mensagem": f"O autor com o id '{autorId}' não foi encontrado no banco de dados."}
             else:
                 return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
     except Exception as e:
         print(f"Não foi possível consultar o autor no banco de dados.", {str(e)} )
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+
+#==================================== Get Editora ==============================
+def consultarLivroEditora(editora: str):
+    try:
+        with Session(database) as session:
+            # Faz a consulta dos livros publicados por uma editora no db
+            query = select(Livros).where(Livros.editora == editora)
+            # Armazena todos os resultados em uma lista
+            result = session.exec(query).all()
+            if result:
+                # Retorna os livros publicados pela editora
+                return {"status": status.HTTP_200_OK, "mensagem": f"Foram encontrados {len(result)} livros publicados por essa editora:", "livros": result}
+            if not result:
+                # Erro ao encontrar os livros publicados
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foram encontrados nenhum livro publicado por essa editora."}
+            else:
+                # Erro ao encontrar a editora no db
+                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
+    except Exception as e:
+        # Erro ao consultar o db, armazene o erro e guarde-o em 'e'
+        print(f"Não foi possível consultar a editora no banco de dados.")
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+    
+
+#==================================== Get Título ==============================
+def consultarLivroTitulo(titulo: str):
+    try:
+        with Session(database) as session:
+            # Faz a consulta dos livros com o título no db
+            query = select(Livros).where(Livros.titulo == titulo)
+            # Armazena todos os resultados em uma lista
+            result = session.exec(query).all()
+            if result:
+                # Retorna o livro com o título
+                return {"status": status.HTTP_200_OK, "mensagem": f"Foram encontrados {len(result)} livros com o título '{titulo}'", "livro": result}
+            if not result:
+                # Erro ao encontrar o livro com o título
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foi encontrado nenhum livro com esse título."}
+            else:
+                # Erro ao encontrar o título no db
+                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
+    except Exception as e:
+        # Erro ao consultar o db, armazene o erro e guarde-o em 'e'
+        print(f"Não foi possível consultar o título no banco de dados.")
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+    
 
 #================================== Post ==============================
 

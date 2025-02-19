@@ -65,7 +65,6 @@ def consultarIsbn(idIsbn, response: Response):
 
 
 #======= Consultar Autor - Get =======
-
 @app.get("/consultar/autor={idAutor}", tags=["Autores"], status_code=200)
 def consultarAutoridAutor(idAutor: uuid.UUID, response: Response):
      
@@ -75,13 +74,26 @@ def consultarAutoridAutor(idAutor: uuid.UUID, response: Response):
 
     return result
 
-#======= Consultar Editora - Get =======
 
-# TODO - Criar endpoint para consultar livros por editora
+#======= Consultar Editora - Get =======
+@app.get("/consultar/editora={editora}", tags=["Editora"], status_code=200)
+def consultarEditora(editora: str, response: Response):
+    # Execute a função e chame-a de result
+    result = consultarLivroEditora(editora)
+    # Pegue a variável status e atribua a response
+    response.status_code = result["status"]
+    return result
+
 
 #======= Consultar Título - Get =======
+@app.get("/consultar/titulo={titulo}", tags=["Titulo"], status_code=200)
+def consultarTitulo(titulo: str, response: Response):
+    # Execute a função e chame-a de result
+    result = consultarLivroTitulo(titulo)
+    # Pegue a variável status e atribua a response
+    response.status_code = result["status"]
+    return result
 
-# TODO - Criar endpoint para consultar livros pelo título
 
 #======= Adicionar um livro - Post =======
 @app.post("/adicionar/isbn={idIsbn}", tags=["Livros"], status_code=200)
