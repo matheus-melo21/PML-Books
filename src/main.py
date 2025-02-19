@@ -15,7 +15,7 @@ if not os.path.exists('database.db'):
 
 #======= Adicionar - Post =======
 @app.post("/adicionar/isbn={idIsbn}", status_code=200)
-def adicionarLivroIsbn(idIsbn, response: Response):
+def adicionarLivroIsbn(idIsbn: str, response: Response):
 
     result = cadastrarLivroIsbn(idIsbn)
 
@@ -24,9 +24,14 @@ def adicionarLivroIsbn(idIsbn, response: Response):
     return result
 
 #======= Consultar - Get =======
-@app.get("/consultar")
-def consultar():
-    return {"message": f"Estes são os livros disponíveis: \n {database}", }
+@app.get("/consultar", status_code=200)
+def consultar(response: Response):
+
+    result = consultarLivros()
+
+    response.status_code = result["status"]
+
+    return result
 
 #======= Atualizar - Put =======
 @app.put("/atualizar")
@@ -34,11 +39,18 @@ def atualizarIdLivro():
     #
     return {"message": "Livro atualizado com sucesso."}
 
+#======= Atualizar - Patch =======
+
 #======= Excluir - Delete =======
-@app.delete("/excluir")
-def excluirIdLivro():
-    #
-    return {"message": "Livro excluído com sucesso."}
+@app.delete("/excluir/id={idLivro}", status_code=200)
+def excluirIdLivro(idLivro: uuid.UUID, response: Response):
+    
+    result = deletarIdLivro(idLivro)
+
+    response.status_code = result["status"]
+
+    return result
+
 
 #======= Consultar ID Livro - Get =======
 @app.get("/consultar/id={idLivro}")

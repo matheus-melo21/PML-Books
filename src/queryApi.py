@@ -3,6 +3,8 @@ from sqlmodel import *
 from utils.db.database import *
 from fastapi import status
 
+#==================================== Get ISBN ==============================
+
 def consultarLivroIsbn(idIsbn: str):
     
     try:
@@ -23,8 +25,30 @@ def consultarLivroIsbn(idIsbn: str):
         print(f"Erro na consulta do livro: {str(e)}")
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
 
-def cadastrarLivroIsbn(idIsbn: str):
+#==================================== Get Livros ==============================
+    
+def consultarLivros():
+    try:
+        # Verificando se o livro já está no banco de dados
+        with Session(database) as session:
+            query = select(Livros)
+            result = session.exec(query).all()
 
+            if result:
+                return {"status": status.HTTP_200_OK, "livro": result}
+            
+            if result is None:
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Livro não foi encontrado no banco de dados."}
+
+            else:
+                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
+    except Exception as e:
+        print(f"Erro na consulta do livro: {str(e)}")
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+
+#================================== Post ==============================
+
+def cadastrarLivroIsbn(idIsbn: str):
     try:
         # Fazendo a consulta à API externa
         response = requests.get(
@@ -49,12 +73,12 @@ def cadastrarLivroIsbn(idIsbn: str):
                     session.add(Livros(
                         isbn=livroData["isbn"],
                         titulo=livroData["title"],
-                        sinopse=livroData["synopsis"],
-                        editora=livroData["publisher"],
-                        formato=livroData["format"],
-                        ano=livroData["year"],
-                        paginas=livroData["page_count"],
-                        cover_url=livroData["cover_url"],
+                        sinopse=livroData.get("synopsis", ""),
+                        editora=livroData.get("publisher", ""),
+                        formato=livroData.get("format", ""),
+                        ano=livroData.get("year", ""),
+                        paginas=livroData.get("page_count", ""),
+                        cover_url=livroData.get("cover_url", ""),
                     ))
                     session.commit()
                     return {"status": status.HTTP_201_CREATED, "mensagem": "Livro foi cadastrado com sucesso."}
@@ -66,3 +90,25 @@ def cadastrarLivroIsbn(idIsbn: str):
         print(f"Erro na consulta do livro: {str(e)}")
         return {"status": "error", "mensagem": str(e)}
     
+#================================== Excluir - Delete ==============================
+
+def deletarIdLivro(livroId: uuid.UUID):
+    
+    try:
+        with Session(database) as session:
+            query = select(Livros).where(Livros.idLivro == livroId)
+            result = session.exec(query).first()
+
+            if result:
+                session.delete(result)
+                session.commit()
+                return {"status": status.HTTP_200_OK, "mensagem": "Livro foi excluído com sucesso."}
+            
+            if result is None:
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Livro não foi encontrado no banco de dados."}
+
+            else:
+                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
+    except Exception as e:
+        print(f"Erro na exclusão do livro: {str(e)}")
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
