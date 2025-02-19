@@ -1,8 +1,9 @@
 import sys 
 import os
-from fastapi import FastAPI, Response, status
+from fastapi import FastAPI, Response, status, Query
 from utils.db.database import *
 from queryApi import *
+from utils.utils import *
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
@@ -33,10 +34,12 @@ if not os.path.exists('database.db'):
 
 
 #======= Consultar todos os livros - Get =======
-@app.get("/consultar", tags=["Livros"], status_code=200)
-def consultar(response: Response):
+@app.get("/listar/livros", tags=["Livros"], status_code=200)
+def ListarTodosLivros(response: Response, page: int = Query(1, alias="pagina", ge=1), per_page: int = Query(10, alias="por_pagina", ge=1, le=10)):
 
-    result = consultarLivros()
+    with Session(database) as session:
+
+        result = paginacao(session, Livros, page, per_page)
 
     response.status_code = result["status"]
 
@@ -58,6 +61,17 @@ def consultarId(idLivro: uuid.UUID, response: Response):
 def consultarIsbn(idIsbn, response: Response):
      
     result = consultarLivroIsbn(idIsbn)
+
+    response.status_code = result["status"]
+
+    return result
+
+#======= Listar Autores - Get =======
+@app.get("/listar/autores", tags=["Autores"], status_code=200)
+def listarTodosAutores(response: Response, page: int = Query(1, alias="pagina", ge=1), per_page: int = Query(10, alias="por_pagina", ge=1, le=10)):
+
+    with Session(database) as session:
+        result = paginacao(session, Autores, page, per_page)
 
     response.status_code = result["status"]
 

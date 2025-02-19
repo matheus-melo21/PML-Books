@@ -70,7 +70,6 @@ def consultarIdLivro(livroId: uuid.UUID):
         print(f"Não foi possível consultar o livro no banco de dados.", {str(e)} )
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
     
-
 #==================================== Get Autor ==============================
 def consultaridAutor(autorId):
 
@@ -91,6 +90,8 @@ def consultaridAutor(autorId):
     except Exception as e:
         print(f"Não foi possível consultar o autor no banco de dados.", {str(e)} )
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+    
+
 
 #==================================== Get Editora ==============================
 def consultarLivroEditora(editora: str):
