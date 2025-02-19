@@ -6,6 +6,17 @@ from queryApi import *
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
+tags_metadata = [
+    {
+        "name": "Livros",
+        "description": "Operações com livros. Gerencie os livros da sua biblioteca.",
+    },
+    {
+        "name": "Autores",
+        "description": "Gerencie os autores dos livros.",
+    },
+]
+
 app = FastAPI()
 
 if not os.path.exists('database.db'):
@@ -14,7 +25,7 @@ if not os.path.exists('database.db'):
 
 
 #======= Adicionar - Post =======
-@app.post("/adicionar/isbn={idIsbn}", status_code=200)
+@app.post("/adicionar/isbn={idIsbn}", tags=["Livros"], status_code=200)
 def adicionarLivroIsbn(idIsbn: str, response: Response):
 
     result = cadastrarLivroIsbn(idIsbn)
@@ -24,7 +35,7 @@ def adicionarLivroIsbn(idIsbn: str, response: Response):
     return result
 
 #======= Consultar - Get =======
-@app.get("/consultar", status_code=200)
+@app.get("/consultar", tags=["Livros"], status_code=200)
 def consultar(response: Response):
 
     result = consultarLivros()
@@ -34,7 +45,7 @@ def consultar(response: Response):
     return result
 
 #======= Atualizar - Put =======
-@app.put("/atualizar")
+@app.put("/atualizar", tags=["Livros"])
 def atualizarIdLivro():
     #
     return {"message": "Livro atualizado com sucesso."}
@@ -42,7 +53,7 @@ def atualizarIdLivro():
 #======= Atualizar - Patch =======
 
 #======= Excluir - Delete =======
-@app.delete("/excluir/id={idLivro}", status_code=200)
+@app.delete("/excluir/id={idLivro}", tags=["Livros"], status_code=200)
 def excluirIdLivro(idLivro: uuid.UUID, response: Response):
     
     result = deletarIdLivro(idLivro)
@@ -53,7 +64,7 @@ def excluirIdLivro(idLivro: uuid.UUID, response: Response):
 
 
 #======= Consultar ID Livro - Get =======
-@app.get("/consultar/id={idLivro}")
+@app.get("/consultar/id={idLivro}", tags=["Livros"])
 def consultarId(idLivro):
     #for id in db:
     #    if id == idLivro:
@@ -61,7 +72,7 @@ def consultarId(idLivro):
     return {"message": f"Esse é o livro {idLivro}"}
 
 #======= Consultar ID ISBN - Get =======
-@app.get("/consultar/isbn={idIsbn}", status_code=200)
+@app.get("/consultar/isbn={idIsbn}", tags=["Livros"], status_code=200)
 def consultarIsbn(idIsbn, response: Response):
      
     result = consultarLivroIsbn(idIsbn)
@@ -71,7 +82,7 @@ def consultarIsbn(idIsbn, response: Response):
     return result
 
 #======= Consultar Autor - Get =======
-@app.get("/consultar/autor={autor}")
+@app.get("/consultar/autor={autor}", tags=["Autores"])
 def consultarAutor(autor: str):
     #return {"message": f"Estes são os livros do autor {autor}: \n {db}""}}
     return consultarLivroAutor(autor)
