@@ -90,8 +90,9 @@ def cadastrarLivroIsbn(idIsbn: str):
                     return {"status": status.HTTP_200_OK, "mensagem": "Livro já está no banco de dados."}
 
                 # Caso não esteja, armazenar os dados no banco
-                if result is None:
-                    session.add(Livros(
+                if not result:
+                    # Criando o objeto do livro
+                    livro = Livros(
                         isbn=livroData["isbn"],
                         titulo=livroData["title"],
                         sinopse=livroData.get("synopsis", ""),
@@ -100,8 +101,24 @@ def cadastrarLivroIsbn(idIsbn: str):
                         ano=livroData.get("year", ""),
                         paginas=livroData.get("page_count", ""),
                         cover_url=livroData.get("cover_url", ""),
-                    ))
-                    session.commit()
+                    )
+                    session.add(livro)
+                    session.commit()             
+
+                    # Processando autores
+                    for nomeAutor in livroData.get("authors", []):
+                        query = select(Autores).where(Autores.nome == nomeAutor)
+                        autor = session.exec(query).first()
+
+                        if not autor:
+                            autor = Autores(nome=nomeAutor)
+                            session.add(autor)
+                            
+                            # Criando a relação entre livro e autor
+                            livroAutor = LivrosAutor(idLivro=livro.idLivro, idAutor=autor.idAutor)
+                            session.add(livroAutor)
+
+                            session.commit()
                     return {"status": status.HTTP_201_CREATED, "mensagem": "Livro foi cadastrado com sucesso."}
         else:
             raise requests.exceptions.RequestException(

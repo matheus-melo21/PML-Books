@@ -1,6 +1,16 @@
-from sqlmodel import Field, SQLModel, create_engine
-from typing import Optional
+from sqlmodel import SQLModel, Field, Relationship, create_engine, Session
+from typing import List, Optional
 import uuid
+
+class LivrosAutor(SQLModel, table=True):
+    idLivro: uuid.UUID = Field(default = None, foreign_key="livros.idLivro", primary_key=True)
+    idAutor: uuid.UUID = Field(default = None, foreign_key="autores.idAutor", primary_key=True)
+
+class Autores(SQLModel, table=True):
+    idAutor: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    nome: str = Field(index=True)
+
+    livros: List["Livros"] = Relationship(back_populates="autores", link_model=LivrosAutor)
 
 class Livros(SQLModel, table=True):
     idLivro: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -12,6 +22,8 @@ class Livros(SQLModel, table=True):
     ano: Optional[int] | None = None
     paginas: Optional[int] | None = None
     cover_url: Optional[str] | None = None
+
+    autores: List["Autores"] = Relationship(back_populates="livros", link_model=LivrosAutor)
 
 
 sqlite_file_name = "database.db"
