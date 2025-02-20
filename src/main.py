@@ -90,12 +90,12 @@ def consultarAutoridAutor(idAutor: uuid.UUID, response: Response):
 
 
 #======= Consultar Editora - Get =======
-# FIXME - Atualizar a função com as mudanças do banco de dados
 
-@app.get("/consultar/editora={editora}", tags=["Editora"], status_code=200)
-def consultarEditora(editora: str, response: Response):
+@app.get("/consultar/editora/id={idEditora}", tags=["Editora"], status_code=200)
+def consultarEditora(idEditora: uuid.UUID, response: Response):
     # Execute a função e chame-a de result
-    result = consultarLivroEditora(editora)
+    result = consultarIdEditora(idEditora)
+
     # Pegue a variável status e atribua a response
     response.status_code = result["status"]
     return result

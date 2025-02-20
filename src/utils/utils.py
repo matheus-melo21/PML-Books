@@ -1,3 +1,4 @@
+import requests
 from sqlmodel import Session, select
 from fastapi import status
 from sqlalchemy.sql import func
@@ -39,3 +40,24 @@ def paginacao(session: Session, model, page: int, per_page: int):
     except Exception as e:
         print(f"Erro na paginação: {str(e)}")
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
+    
+
+def consultarLivroBrasilApiISBN(idIsbn: str):
+    """
+    Consulta a Brasil API para obter informações sobre um livro usando o ISBN.
+
+    :param idIsbn: Código ISBN do livro.
+    :return: Dicionário com os dados do livro ou None em caso de erro.
+    """
+    url = f"https://brasilapi.com.br/api/isbn/v1/{idIsbn}"
+
+    try:
+        response = requests.get(url, headers={"Accept": "application/json"})     
+
+        if response.status_code == 200:
+            return response.json()
+        return None
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Erro na consulta da API: {str(e)}")
+        return None

@@ -1,6 +1,7 @@
 import requests
 from sqlmodel import *
 from utils.db.database import *
+from utils.utils import *
 from fastapi import status
 
 # FIXME - Corrigir a consulta com espaços e/ou com caracteres especiais
@@ -73,26 +74,20 @@ def consultaridAutor(autorId):
 
 
 #==================================== Get - Consultar Editora ==============================
-def consultarLivroEditora(editora: str):
+def consultarIdEditora(editoraId: uuid.UUID):
+
     try:
         with Session(database) as session:
             # Faz a consulta dos livros publicados por uma editora no db
-            query = select(Livros).where(Livros.editora == editora)
+            query = select(Editoras).where(Editoras.idEditora == editoraId)
             # Armazena todos os resultados em uma lista
-            result = session.exec(query).all()
+            result = session.exec(query).first()
             if result:
-                # Checa quantos livros foram encontrados no result
-                if len(result) == 1:
                 # Retorna os livros publicados pela editora
-                    return {"status": status.HTTP_200_OK, "mensagem": f"Foi encontrado 1 livro publicado por essa editora:", "livro": result}
-                if len(result) > 1:
-                    return {"status": status.HTTP_200_OK, "mensagem": f"Foram encontrados {len(result)} livros publicados por essa editora:", "livros": result}
-                else:
-                    # Erro ao encontrar os livros publicados
-                    return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foi encontrado nenhum livro publicado por essa editora."}
-            if not result:
-                # Editora não encontrada ao encontrar a editora no db
-                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": f"A editora '{editora}' não foi encontrada no nosso banco de dados."}
+                    return {"status": status.HTTP_200_OK, "Editora": result}
+            else:
+                # Erro ao encontrar os livros publicados
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foi encontrado nenhuma editora com esse ID."}
     except Exception as e:
         # Erro ao consultar o db, armazene o erro e guarde-o em 'e'
         print(f"Não foi possível consultar a editora no banco de dados.")
@@ -127,73 +122,66 @@ def consultarLivroTitulo(titulo: str):
 
 def cadastrarLivroIsbn(idIsbn: str):
     try:
-        # Fazendo a consulta à API externa
-        response = requests.get(
-            f"https://brasilapi.com.br/api/isbn/v1/{idIsbn}",
-            headers={"Accept": "application/json"},
-        )
-        
-        if response.status_code == 200:
-            # Convertendo a resposta para JSON
-            livroData = response.json()
+        # Fazendo a consulta à Brasil API usando a função genérica
+        livroData = consultarLivroBrasilApiISBN(idIsbn)
+
+        if livroData is None:
+            return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Livro não encontrado na API."}
+
+        # Verificando se o livro já está no banco de dados
+        with Session(database) as session:
+            query = select(Livros).where(Livros.isbn == idIsbn)
+            result = session.exec(query).first()
+
+            if result:
+                return {"status": status.HTTP_200_OK, "mensagem": "Livro já está no banco de dados."}
             
-            # Verificando se o livro já está no banco de dados
-            with Session(database) as session:
-                query = select(Livros).where(Livros.isbn == idIsbn)
-                result = session.exec(query).first()
+            # Acessando os dados retornados pela API
+            nomeEditora = livroData.get("publisher", "").strip()
 
-                if result:
-                    return {"status": status.HTTP_200_OK, "mensagem": "Livro já está no banco de dados."}
-                
-                nomeEditora = livroData.get("publisher", "").strip()
+            if nomeEditora:
+                query = select(Editoras).where(Editoras.nome == nomeEditora)
+                editora = session.exec(query).first()
 
-                if nomeEditora:
-                    query = select(Editoras).where(Editoras.nome == nomeEditora)
-                    editora = session.exec(query).first()
+                if not editora:
+                    editora = Editoras(nome=nomeEditora)
+                    session.add(editora)
+                    session.commit()  # Confirmando a criação da editora
+            else:
+                editora = None  # Caso o livro não tenha editora informada
 
-                    if not editora:
-                        editora = Editoras(nome=nomeEditora)
-                        session.add(editora)
-                        session.commit()  # Confirmando a criação da editora
+            # Caso não esteja, armazenar os dados no banco
+            if not result:
+                # Criando o objeto do livro
+                livro = Livros(
+                    isbn=livroData["isbn"],
+                    titulo=livroData["title"],
+                    sinopse=livroData.get("synopsis", ""),
+                    formato=livroData.get("format", ""),
+                    ano=livroData.get("year", ""),
+                    paginas=livroData.get("page_count", ""),
+                    cover_url=livroData.get("cover_url", ""),
+                    idEditora=editora.idEditora if editora else None,
+                )
+                session.add(livro)
+                session.commit()             
 
-                else:
-                    editora = None  # Caso o livro não tenha editora informada
+                # Processando autores
+                for nomeAutor in livroData.get("authors", []):
+                    query = select(Autores).where(Autores.nome == nomeAutor)
+                    autor = session.exec(query).first()
 
-                # Caso não esteja, armazenar os dados no banco
-                if not result:
-                    # Criando o objeto do livro
-                    livro = Livros(
-                        isbn=livroData["isbn"],
-                        titulo=livroData["title"],
-                        sinopse=livroData.get("synopsis", ""),
-                        formato=livroData.get("format", ""),
-                        ano=livroData.get("year", ""),
-                        paginas=livroData.get("page_count", ""),
-                        cover_url=livroData.get("cover_url", ""),
-                        idEditora=editora.idEditora if editora else None,
-                    )
-                    session.add(livro)
-                    session.commit()             
+                    if not autor:
+                        autor = Autores(nome=nomeAutor)
+                        session.add(autor)
+                        
+                        # Criando a relação entre livro e autor
+                        livroAutor = LivrosAutor(idLivro=livro.idLivro, idAutor=autor.idAutor)
+                        session.add(livroAutor)
 
-                    # Processando autores
-                    for nomeAutor in livroData.get("authors", []):
-                        query = select(Autores).where(Autores.nome == nomeAutor)
-                        autor = session.exec(query).first()
+                        session.commit()
+                return {"status": status.HTTP_201_CREATED, "mensagem": "Livro foi cadastrado com sucesso."}
 
-                        if not autor:
-                            autor = Autores(nome=nomeAutor)
-                            session.add(autor)
-                            
-                            # Criando a relação entre livro e autor
-                            livroAutor = LivrosAutor(idLivro=livro.idLivro, idAutor=autor.idAutor)
-                            session.add(livroAutor)
-
-                            session.commit()
-                    return {"status": status.HTTP_201_CREATED, "mensagem": "Livro foi cadastrado com sucesso."}
-        else:
-            raise requests.exceptions.RequestException(
-                f"Erro ao consultar a API externa: {response.status_code}"
-            )
     except Exception as e:
         print(f"Erro na consulta do livro: {str(e)}")
         return {"status": "error", "mensagem": str(e)}
