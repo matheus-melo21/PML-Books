@@ -33,7 +33,7 @@ if not os.path.exists('database.db'):
     SQLModel.metadata.create_all(database)
 
 
-#======= Consultar todos os livros - Get =======
+#======= Listar Livros - Get =======
 @app.get("/listar/livros", tags=["Livros"], status_code=200)
 def ListarTodosLivros(response: Response, page: int = Query(1, alias="pagina", ge=1), per_page: int = Query(10, alias="por_pagina", ge=1, le=10)):
 
@@ -90,6 +90,8 @@ def consultarAutoridAutor(idAutor: uuid.UUID, response: Response):
 
 
 #======= Consultar Editora - Get =======
+# FIXME - Atualizar a função com as mudanças do banco de dados
+
 @app.get("/consultar/editora={editora}", tags=["Editora"], status_code=200)
 def consultarEditora(editora: str, response: Response):
     # Execute a função e chame-a de result

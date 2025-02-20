@@ -4,32 +4,11 @@ from utils.db.database import *
 from fastapi import status
 
 # FIXME - Corrigir a consulta com espaços e/ou com caracteres especiais
-# FIXME - Corrigir pluralidade nas mensagens de retorno
-
-#==================================== Get Todos os Livros ==============================
-    
-def consultarLivros():
-    try:
-        # Cria uma sessão com o db
-        with Session(database) as session:
-            # Faz a consulta de todos os livros
-            query = select(Livros)
-            # Armazena o resultado em uma lista
-            result = session.exec(query).all()
-            # Retorna erros e o db em caso de sucesso
-            if result:
-                return {"status": status.HTTP_200_OK, "livro": result}
-            if not result:
-                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "O banco de dados está vazio."}
-
-            else:
-                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
-    except Exception as e:
-        print(f"Erro na consulta do livro: {str(e)}")
-        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+# FIXME - atualizarLivro() - Comparar os jsons antes de atualizar, para evitar atualizações desnecessárias
+# FIXME - consultarAutorIdAutor() - Mostrar os livros que o autor escreveu
 
 
-#==================================== Get ISBN ==============================
+#==================================== Get - Consultar ID ISBN ==============================
 
 def consultarLivroIsbn(idIsbn: str):
     
@@ -38,7 +17,7 @@ def consultarLivroIsbn(idIsbn: str):
         with Session(database) as session:
             query = select(Livros).where(Livros.isbn == idIsbn)
             result = session.exec(query).first()
-
+            
             if result:
                 return {"status": status.HTTP_200_OK, "livro": result}
             
@@ -52,7 +31,7 @@ def consultarLivroIsbn(idIsbn: str):
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
 
 
-#==================================== Get ID Livro ==============================
+#==================================== Get - Consultar ID Livro ==============================
 def consultarIdLivro(livroId: uuid.UUID):
     try:
         with Session(database) as session:
@@ -70,7 +49,7 @@ def consultarIdLivro(livroId: uuid.UUID):
         print(f"Não foi possível consultar o livro no banco de dados.", {str(e)} )
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
     
-#==================================== Get Autor ==============================
+#==================================== Get - Consultar Autor ==============================
 def consultaridAutor(autorId):
 
     try:
@@ -93,7 +72,7 @@ def consultaridAutor(autorId):
     
 
 
-#==================================== Get Editora ==============================
+#==================================== Get - Consultar Editora ==============================
 def consultarLivroEditora(editora: str):
     try:
         with Session(database) as session:
@@ -102,21 +81,25 @@ def consultarLivroEditora(editora: str):
             # Armazena todos os resultados em uma lista
             result = session.exec(query).all()
             if result:
+                # Checa quantos livros foram encontrados no result
+                if len(result) == 1:
                 # Retorna os livros publicados pela editora
-                return {"status": status.HTTP_200_OK, "mensagem": f"Foram encontrados {len(result)} livros publicados por essa editora:", "livros": result}
+                    return {"status": status.HTTP_200_OK, "mensagem": f"Foi encontrado 1 livro publicado por essa editora:", "livro": result}
+                if len(result) > 1:
+                    return {"status": status.HTTP_200_OK, "mensagem": f"Foram encontrados {len(result)} livros publicados por essa editora:", "livros": result}
+                else:
+                    # Erro ao encontrar os livros publicados
+                    return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foi encontrado nenhum livro publicado por essa editora."}
             if not result:
-                # Erro ao encontrar os livros publicados
-                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foram encontrados nenhum livro publicado por essa editora."}
-            else:
-                # Erro ao encontrar a editora no db
-                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
+                # Editora não encontrada ao encontrar a editora no db
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": f"A editora '{editora}' não foi encontrada no nosso banco de dados."}
     except Exception as e:
         # Erro ao consultar o db, armazene o erro e guarde-o em 'e'
         print(f"Não foi possível consultar a editora no banco de dados.")
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
     
 
-#==================================== Get Título ==============================
+#==================================== Get - Consultar Título ==============================
 def consultarLivroTitulo(titulo: str):
     try:
         with Session(database) as session:
@@ -124,15 +107,16 @@ def consultarLivroTitulo(titulo: str):
             query = select(Livros).where(Livros.titulo == titulo)
             # Armazena todos os resultados em uma lista
             result = session.exec(query).all()
-            if result:
+            # Checa quantos livros foram encontrados no result
+            if len(result) == 1:
                 # Retorna o livro com o título
-                return {"status": status.HTTP_200_OK, "mensagem": f"Foram encontrados {len(result)} livros com o título '{titulo}'", "livro": result}
-            if not result:
+                return {"status": status.HTTP_200_OK, "mensagem": f"Foi encontrado 1 livro com esse título", "livro": result}
+            if len(result) > 1:
+                # Retorna os livros com o título
+                return {"status": status.HTTP_200_OK, "mensagem": f"Foram encontrados {len(result)} livros com esse título:", "livros": result}
+            else:
                 # Erro ao encontrar o livro com o título
                 return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foi encontrado nenhum livro com esse título."}
-            else:
-                # Erro ao encontrar o título no db
-                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno no servidor."}
     except Exception as e:
         # Erro ao consultar o db, armazene o erro e guarde-o em 'e'
         print(f"Não foi possível consultar o título no banco de dados.")
@@ -232,24 +216,22 @@ def atualizarLivro(idIsbn: str):
                     # Informe que ele foi excluído e cadastre o livro novamente
                     print(f"O livro com ISBN '{idIsbn}' foi excluido do banco de dados com sucesso.")
                     cadastrarLivroIsbn(idIsbn)
-                    if result:
+                    if result == status.HTTP_201_CREATED:
                         # Informe que o livro foi atualizado com sucesso
                         return {"status": status.HTTP_200_OK, "mensagem": f"O livro com ISBN '{idIsbn}' foi atualizado com sucesso."}
                     else:
                         # Erro ao cadastrar o livro
                         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro ao cadastrar o livro no banco de dados."}
+                else:
                     # Erro ao excluir o livro
-                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "O livro com ISBN '{idIsbn}' não pode ser excluído do banco de dados."}
-            if not result:
-                # Erro ao encontrar o livro no db
-                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Não foi encontrado um livro com esse ISBN no banco de dados"}
+                    return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "O livro com ISBN '{idIsbn}' não pode ser excluído do banco de dados."}
             else:
-                # Erro interno no servidor
-                return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": "Erro interno do servidor."}
+                # Erro ao encontrar o livro no db
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": "Erro ao consultar o livro com esse ISBN no banco de dados"}
     # Se houver um erro, armazene-o em 'e' e informe-o
     except Exception as e:
-        print(f"Erro: {str(e)}")
-        return {"status": "Erro", "mensagem": str(e)}
+        print(f"Erro ao atualizar o livro: {str(e)}")
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
 
     
 #================================== Excluir - Delete ==============================
