@@ -12,6 +12,14 @@ class Autores(SQLModel, table=True):
 
     livros: List["Livros"] = Relationship(back_populates="autores", link_model=LivrosAutor)
 
+class Editoras(SQLModel, table=True):
+    idEditora: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    nome: Optional[str] | None = None 
+
+    livros: List["Livros"] = Relationship(back_populates="editora")
+
+
+
 class Livros(SQLModel, table=True):
     idLivro: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     isbn: str = Field(index=True)
@@ -24,6 +32,9 @@ class Livros(SQLModel, table=True):
     cover_url: Optional[str] | None = None
 
     autores: List["Autores"] = Relationship(back_populates="livros", link_model=LivrosAutor)
+    idEditora: Optional[uuid.UUID] = Field(default=None, foreign_key="editoras.idEditora")
+    editora: Optional["Editoras"] = Relationship(back_populates="livros")
+
 
 
 sqlite_file_name = "database.db"

@@ -160,6 +160,20 @@ def cadastrarLivroIsbn(idIsbn: str):
 
                 if result:
                     return {"status": status.HTTP_200_OK, "mensagem": "Livro já está no banco de dados."}
+                
+                nomeEditora = livroData.get("publisher", "").strip()
+
+                if nomeEditora:
+                    query = select(Editoras).where(Editoras.nome == nomeEditora)
+                    editora = session.exec(query).first()
+
+                    if not editora:
+                        editora = Editoras(nome=nomeEditora)
+                        session.add(editora)
+                        session.commit()  # Confirmando a criação da editora
+
+                else:
+                    editora = None  # Caso o livro não tenha editora informada
 
                 # Caso não esteja, armazenar os dados no banco
                 if not result:
@@ -168,11 +182,11 @@ def cadastrarLivroIsbn(idIsbn: str):
                         isbn=livroData["isbn"],
                         titulo=livroData["title"],
                         sinopse=livroData.get("synopsis", ""),
-                        editora=livroData.get("publisher", ""),
                         formato=livroData.get("format", ""),
                         ano=livroData.get("year", ""),
                         paginas=livroData.get("page_count", ""),
                         cover_url=livroData.get("cover_url", ""),
+                        idEditora=editora.idEditora if editora else None,
                     )
                     session.add(livro)
                     session.commit()             
