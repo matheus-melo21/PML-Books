@@ -4,6 +4,8 @@ from utils.db.database import *
 from utils.utils import *
 from fastapi import status
 
+teste_patch = {}
+
 # FIXME - Corrigir a consulta com espaços e/ou com caracteres especiais
 # FIXME - atualizarLivro() - Comparar os jsons antes de atualizar, para evitar atualizações desnecessárias
 # FIXME - consultarAutorIdAutor() - Mostrar os livros que o autor escreveu
@@ -221,7 +223,34 @@ def atualizarLivro(idIsbn: str):
         print(f"Erro ao atualizar o livro: {str(e)}")
         return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
 
-    
+
+#================================== Patch ===========================================    
+
+def atualizarLivroCampo(idLivro: uuid.UUID, titulo: str = None, sinopse: str = None):    
+    try:
+        with Session(database) as session:
+            # Cria sessão no banco de dados, armazena a primeira resposta na variável result
+            result = session.exec(select(Livros).where(Livros.idLivro == idLivro)).first()
+            # Armazena os dados novos temporariamente em um dict
+            teste_patch[idLivro] = {"titulo": titulo}
+            if result:
+                abcd = {}
+                if titulo and titulo != result.titulo:  
+                    teste_patch["titulo"] = titulo
+                    result.titulo = titulo
+
+                if teste_patch:
+                    session.commit()
+                    return {"status": status.HTTP_200_OK, "mensagem": "Campos atualizados com sucesso."}
+                else:
+                    return {"status": status.HTTP_409_CONFLICT, "mensagem": "Não foram detectadas nenhuma mudança"}
+            else:
+                return {"status": status.HTTP_404_NOT_FOUND, "mensagem": f"Não foi encontrado nenhum livro com o id {idLivro}"}
+    except Exception as e:
+        print(f"Erro ao consultar o banco de dados. {str(e)}")
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+
+
 #================================== Excluir - Delete ==============================
 
 def deletarIdLivro(livroId: uuid.UUID):

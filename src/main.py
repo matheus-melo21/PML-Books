@@ -5,6 +5,8 @@ from utils.db.database import *
 from queryApi import *
 from utils.utils import *
 
+# FIXME - consultarAutorIdAutor(), consultarEditora() - Atualizar a função com as mudanças do banco de dados
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 tags_metadata = [
@@ -79,6 +81,7 @@ def listarTodosAutores(response: Response, page: int = Query(1, alias="pagina", 
 
 
 #======= Consultar Autor - Get =======
+
 @app.get("/consultar/autor={idAutor}", tags=["Autores"], status_code=200)
 def consultarAutoridAutor(idAutor: uuid.UUID, response: Response):
      
@@ -134,8 +137,13 @@ def atualizarIdLivro(idIsbn: str, response: Response):
 
 
 #======= Atualizar - Patch =======
-
-#TODO - Criar endpoint patch para atualizar apenas um campo do livro
+""""
+@app.patch("/atualizar/id={idLivro}", tags=["Livros"], status_code=200)
+def atualizarCampoLivro(idLivro: str, response: Response):
+    result = atualizarLivroCampo(idLivro)
+    response.status_code = result["status"]
+    return result
+"""
 
 
 #======= Excluir um livro - Delete =======
