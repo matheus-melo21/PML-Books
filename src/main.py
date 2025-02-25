@@ -1,7 +1,9 @@
 import sys 
 import os
-from fastapi import FastAPI, Response, status, Query
+from fastapi import FastAPI, Response, status, Query, Body
+from typing import Annotated
 from utils.db.database import *
+from form import *
 from queryApi import *
 from utils.utils import *
 
@@ -119,6 +121,16 @@ def consultarTitulo(titulo: str, response: Response):
 def adicionarLivroIsbn(idIsbn: str, response: Response):
 
     result = cadastrarLivroIsbn(idIsbn)
+
+    response.status_code = result["status"]
+
+    return result
+
+#======= Cadastrar um livro - Post =======
+@app.post("/cadastrar/livro", tags=["Livros"], status_code=200)
+def adicionarLivro(livro: Annotated[ formLivroCadastro, Body(embed=True)], response: Response):
+
+    result = cadastrarLivro(livro)
 
     response.status_code = result["status"]
 

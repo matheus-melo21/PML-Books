@@ -188,6 +188,52 @@ def cadastrarLivroIsbn(idIsbn: str):
         print(f"Erro na consulta do livro: {str(e)}")
         return {"status": "error", "mensagem": str(e)}
     
+def cadastrarLivro(livroData):
+
+    print(livroData)
+
+    isbn = livroData.isbn
+    titulo = livroData.titulo
+    sinopse = livroData.sinopse or ""
+    formato = livroData.formato or ""
+    ano = livroData.ano or ""
+    paginas = livroData.paginas or ""
+    cover_url = livroData.cover_url or ""
+    idEditora = livroData.idEditora or None
+
+    try:
+        # Verificando se o livro já está no banco de dados
+        with Session(database) as session:
+            query = select(Livros).where(Livros.isbn == isbn)
+            result = session.exec(query).first()
+
+            if result:
+                return {"status": status.HTTP_200_OK, "mensagem": "Livro já está no banco de dados."}
+
+            # Caso não esteja, armazenar os dados no banco
+            if not result:
+                #Criando o objeto do livro
+                livro = Livros(
+                    isbn=isbn,
+                    titulo=titulo,
+                    sinopse=sinopse,
+                    formato=formato,
+                    ano=ano,
+                    paginas=paginas,
+                    cover_url=cover_url,
+                    idEditora=idEditora,
+                )
+                session.add(livro)
+                session.commit()             
+
+                return {"status": status.HTTP_201_CREATED, "mensagem": "Livro foi cadastrado com sucesso."}
+            
+    except Exception as e:
+        print(f"Erro na consulta do livro: {str(e)}")
+        return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "mensagem": str(e)}
+    
+
+    
 #================================== Put ===========================================
 
 def atualizarLivro(idIsbn: str):
